@@ -17,7 +17,7 @@ if (!function_exists('add_action')) {
 define('YMAP_DS', DIRECTORY_SEPARATOR);
 define('YMAP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('YMAP_FOLDER_NAME', dirname(plugin_basename(__FILE__)));
-define('YMAP_PLUGIN_URL', plugins_url() . YMAP_DS . YMAP_FOLDER_NAME . YMAP_DS);
+define('YMAP_PLUGIN_URL', plugins_url() . '/' . YMAP_FOLDER_NAME . '/');
 define('YMAP_PLUGIN_VERSION', '0.1');
 
 // Initialize a plugin

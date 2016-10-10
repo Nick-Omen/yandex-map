@@ -51,7 +51,7 @@ class YandexMapAdmin
      */
     public static function register_scripts()
     {
-        wp_register_script('yandex-map-admin', YMAP_PLUGIN_URL . 'admin' . YMAP_DS . '_inc' . YMAP_DS . 'yandex-map.admin.js',
+        wp_register_script('yandex-map-admin', YMAP_PLUGIN_URL . 'admin/_inc/yandex-map.admin.js',
             array('jquery', 'yandex-map-class'), null, true);
     }
 
