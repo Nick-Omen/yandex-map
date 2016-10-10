@@ -24,6 +24,8 @@ class YandexMapAdmin
         add_action('admin_init', array('YandexMapAdmin', 'register_settings'));
         add_action('admin_init', array('YandexMapAdmin', 'register_scripts'));
         add_shortcode('admin_yandex_map', array('YandexMapAdmin', 'insert_yandex_map'));
+        add_action('add_meta_boxes', array('YandexMapAdmin', 'yandex_custom_box' ));
+        self::add_yandex_post_type();
     }
 
     /**
@@ -62,7 +64,11 @@ class YandexMapAdmin
      */
     public static function insert_yandex_map($atts, $content, $tag)
     {
+        wp_register_script('yandex-api-admin', YMAP_PLUGIN_URL . 'admin/_inc/yandex-map.admin.js',
+            array('jquery', 'yandex-map-class'), null, true);
+
         require_once YMAP_PLUGIN_DIR . 'views' . YMAP_DS . 'yandex_map.php';
+
     }
 
     /**
@@ -72,5 +78,52 @@ class YandexMapAdmin
     {
         wp_enqueue_script('yandex-map-admin');
         require_once(YMAP_PLUGIN_DIR . 'admin' . YMAP_DS . 'views' . YMAP_DS . 'config.php');
+    }
+
+    public function add_yandex_post_type()
+    {
+        // Set UI labels for Custom Post Typ
+         register_post_type('coordinates', array(
+            'labels' => array(
+                'name'            => __( 'Карты','yandex-map' ),
+                'singular_name'   => __( 'Карты', 'yandex-map' ),
+                'add_new'         => __( 'Добавить','yandex-map'),
+                'add_new_item'    => __( 'Добавить координаты','yandex-map' ),
+                'edit'            => __( 'Edit news','yandex-map' ),
+                'edit_item'       => __( 'Edit news item','yandex-map' ),
+                'new_item'        => __( 'Single news','yandex-map'),
+                'all_items'       => __( 'Все карты','yandex-map' ),
+                'view'            => __( 'Посмотреть все карты', 'yandex-map' ),
+                'view_item'       => __( 'Просмотр карты', 'yandex-map' ),
+                'search_items'    => __( 'Поиск карт', 'yandex-map' ),
+                'not_found'       => __( 'Ничего не найдено', 'yandex-map' ),
+            ),
+            'public' => true,
+            'menu_position' => 2,
+            'supports' => array( 'title', 'ya-map'),
+            'taxonomies' => array( '' ),
+            'has_archive' => true,
+            'capability_type' => 'post',
+            'menu_icon'   => 'dashicons-admin-site',
+            'rewrite' => array('slug' => 'coordinates'),
+            'register_meta_box_cb' => array('YandexMapAdmin','yandex_custom_box')
+         ));
+      
+    }
+
+    /**
+     * Add the Events Meta Boxes
+     */
+    public  static  function yandex_custom_box()
+    {
+        add_meta_box('yandex-box', 'Карта', array('YandexMapAdmin','renderYandexBox'), 'coordinates', 'advanced', 'high');
+    }
+
+    /**
+     *
+     */
+    public static function renderYandexBox()
+    {
+        require_once(YMAP_PLUGIN_DIR  . 'admin' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'yandex-map-box.php');
     }
 }
