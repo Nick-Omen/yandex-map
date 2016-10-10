@@ -7,29 +7,23 @@
  * License: GPLv2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
  */
-$yandexMapWidth = isset($atts['width']) ? $atts['width'] == 0 ? "100%" : "{$atts['width']}px" : "100%";
-$yandexMapHeight = isset($atts['height']) ? $atts['height'] == 0 ? "100%" : "{$atts['height']}px" : "100%";
+$ymapWidthTmp = isset($atts['width']) ? $atts['width'] : esc_attr(get_option('yandex_map_default_width'));
+$ymapHeightTmp = isset($atts['height']) ? $atts['height'] : esc_attr(get_option('yandex_map_default_height'));
 ?>
 <script>
-    var yandexMapConfig = {
-        lat: <?php isset($atts['lat']) ? $atts['lat'] : esc_attr(get_option('yandex_map_default_lat', 42.8768536)) ?>,
-        lng: <?php isset($atts['lng']) ? $atts['lng'] : esc_attr(get_option('yandex_map_default_lng', 74.5218208)) ?>,
-        zoom: <?php isset($atts['zoom']) ? $atts['zoom'] : esc_attr(get_option('yandex_map_default_zoom', 13)) ?>
+    var yandexMapConfig_<?php echo $tag; ?> = {
+        width: "<?php echo $ymapWidthTmp == 0 ? "100%" : $ymapWidthTmp . 'px' ?>",
+        height: "<?php echo $ymapHeightTmp == 0 ? "100%" : $ymapHeightTmp . 'px' ?>",
+        lat: <?php echo isset($atts['lat']) ? $atts['lat'] : esc_attr(get_option('yandex_map_default_lat', 0)) ?>,
+        lng: <?php echo isset($atts['lng']) ? $atts['lng'] : esc_attr(get_option('yandex_map_default_lng', 0)) ?>,
+        zoom: <?php echo isset($atts['zoom']) ? $atts['zoom'] : esc_attr(get_option('yandex_map_default_zoom', 13)) ?>
     };
-</script>
-<div id="omen-maps-yandex"
-     style="width: <?php echo $yandexMapWidth; ?>; height: <?php echo $yandexMapHeight; ?>;"></div>
-<script>
-    var omenMapsYandex;
 
-    var omenMapsInitYandex = function(){
-        var initialPosition = [
-            yandexMapConfig.lat, yandexMapConfig.lng
-        ];
-        omenMapsYandex = new ymaps.Map("omen-maps-yandex", {
-            center: initialPosition,
-            zoom: yandexMapConfig.zoom
-        });
-        omenMapsYandex.geoObjects.add(placemark)
-    }
+    var initYandexMap_<?php echo $tag; ?> = function(){
+        var map = new YandexMapClass(document.getElementById("<?php echo $tag; ?>"), yandexMapConfig_<?php echo $tag; ?>);
+    };
+    jQuery(document).on('yandexMapLoaded', function(){
+        initYandexMap_<?php echo $tag; ?>();
+    });
 </script>
+<div id="<?php echo $tag; ?>"><span class="text-loading">Загрузка карты...</span></div>

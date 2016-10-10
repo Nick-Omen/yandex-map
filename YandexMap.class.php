@@ -23,7 +23,8 @@ class YandexMap
     {
         wp_register_script('yandex-map-class', YMAP_PLUGIN_URL . '_inc/yandex-map.class.js', array('jquery'), null,
             true);
-        wp_register_script('yandex-map', YMAP_PLUGIN_URL . '_inc/yandex-map.js', array('jquery', 'yandex-map-class'), null,
+        wp_register_script('yandex-map', "https://api-maps.yandex.ru/2.1/?lang=" . get_locale() . "&onload=fireYandexMapLoaded", false, null, true);
+        wp_register_script('yandex-map-js', YMAP_PLUGIN_URL . '_inc/yandex-map.js', array('jquery', 'yandex-map', 'yandex-map-class'), null,
             true);
     }
 }

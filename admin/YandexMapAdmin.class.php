@@ -23,6 +23,7 @@ class YandexMapAdmin
         add_action('admin_menu', array('YandexMapAdmin', 'add_menu_instance'));
         add_action('admin_init', array('YandexMapAdmin', 'register_settings'));
         add_action('admin_init', array('YandexMapAdmin', 'register_scripts'));
+        add_shortcode('admin_yandex_map', array('YandexMapAdmin', 'insert_yandex_map'));
     }
 
     /**
@@ -52,7 +53,16 @@ class YandexMapAdmin
     public static function register_scripts()
     {
         wp_register_script('yandex-map-admin', YMAP_PLUGIN_URL . 'admin/_inc/yandex-map.admin.js',
-            array('jquery', 'yandex-map-class'), null, true);
+            array('jquery', 'yandex-map', 'yandex-map-class'), null, true);
+    }
+
+    /**
+     * Insert yandex map as a shortcode.
+     * @param $atts - array
+     */
+    public static function insert_yandex_map($atts, $content, $tag)
+    {
+        require_once YMAP_PLUGIN_DIR . 'views' . YMAP_DS . 'yandex_map.php';
     }
 
     /**
