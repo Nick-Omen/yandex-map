@@ -23,8 +23,11 @@ class YandexMapAdmin
         add_action('admin_menu', array('YandexMapAdmin', 'add_menu_instance'));
         add_action('admin_init', array('YandexMapAdmin', 'register_settings'));
         add_action('admin_init', array('YandexMapAdmin', 'register_scripts'));
-        add_shortcode('admin_yandex_map', array('YandexMapAdmin', 'insert_yandex_map'));
+
         add_action('add_meta_boxes', array('YandexMapAdmin', 'yandex_custom_box' ));
+
+        add_action('insert_yandex_map', array('YandexMapAdmin', 'insert_yandex_map' ));
+
         self::add_yandex_post_type();
     }
 
@@ -62,13 +65,28 @@ class YandexMapAdmin
      * Insert yandex map as a shortcode.
      * @param $atts - array
      */
-    public static function insert_yandex_map($atts, $content, $tag)
+    public static function insert_yandex_map($args)
     {
-        wp_register_script('yandex-api-admin', YMAP_PLUGIN_URL . 'admin/_inc/yandex-map.admin.js',
-            array('jquery', 'yandex-map-class'), null, true);
+        wp_enqueue_script('yandex-map-admin');
+        ?>
+        <script>
+            var yandexMapConfig_admin_page = {
+                width: "100%",
+                height: "300px",
+                lat: <?=$args['lat'] ?>,
+                lng: <?=$args['lng'] ?>,
+                zoom: <?=$args['zoom'] ?>
+            };
 
-        require_once YMAP_PLUGIN_DIR . 'views' . YMAP_DS . 'yandex_map.php';
-
+            var initYandexMap_admin_page = function(){
+                new AdminYandexMapClass(yandexMapConfig_admin_page);
+            };
+            jQuery(document).on('yandexMapLoaded', function(){
+                initYandexMap_admin_page();
+            });
+        </script>
+        <div id="admin_page_map"><span class="text-loading">Загрузка карты...</span></div>
+        <?php
     }
 
     /**
@@ -80,7 +98,7 @@ class YandexMapAdmin
         require_once(YMAP_PLUGIN_DIR . 'admin' . YMAP_DS . 'views' . YMAP_DS . 'config.php');
     }
 
-    public function add_yandex_post_type()
+    public static function add_yandex_post_type()
     {
         // Set UI labels for Custom Post Typ
          register_post_type('coordinates', array(

@@ -44,7 +44,7 @@
 
         <h3><?php _e('Начальная позиция на карте', 'yandex-map') ?></h3>
         <div style="padding-top: 10px;">
-            <label>
+            <label style="margin-right: 10px;">
                 <input name="use_map_coordinates" type="radio" value="map" checked/>
                 <?php _e('Использовать коортинаты с карты', 'yandex-map') ?>
             </label>
@@ -57,7 +57,7 @@
             <tr valign="top" class="coordinates hand" style="display: none;">
                 <th scope="row"><label for="yandex-map_default-lat"><?php _e('Широта по-умолчанию', 'yandex-map') ?></label></th>
                 <td>
-                    <input id="yandex-map_default-lat"
+                    <input id="yandex-map_default-lat" class="lat"
                            name="yandex_map_default_lat"
                            value="<?php echo esc_attr(get_option('yandex_map_default_lat', 0)); ?>"
                            type="number" min="-179.999999" max="179.999999" step="0.000001"/>
@@ -66,7 +66,7 @@
             <tr valign="top" class="coordinates hand" style="display: none;">
                 <th scope="row"><label for="yandex-map_default-lng"><?php _e('Долгота по-умолчанию', 'yandex-map') ?></label></th>
                 <td>
-                    <input id="yandex-map_default-lng"
+                    <input id="yandex-map_default-lng" class="lng"
                            name="yandex_map_default_lng"
                            value="<?php echo esc_attr(get_option('yandex_map_default_lng', 0)); ?>"
                            type="number" min="-179.999999" max="179.999999" step="0.000001"/>
@@ -75,7 +75,7 @@
             <tr valign="top" class="coordinates hand" style="display: none;">
                 <th scope="row"><label for="yandex-map_default-zoom"><?php _e('Приближение по-умолчанию', 'yandex-map') ?></label></th>
                 <td>
-                    <input id="yandex-map_default-zoom"
+                    <input id="yandex-map_default-zoom" class="zoom"
                            name="yandex_map_default_zoom"
                            value="<?php echo esc_attr(get_option('yandex_map_default_zoom', 13)); ?>"
                            type="number" size="2" min="2" max="18"/>
@@ -84,33 +84,11 @@
             <tr valign="top" class="coordinates map">
                 <th scope="row"><label for="yandex-map_default-lng"><?php _e('Начальные координаты на карте', 'yandex-map') ?></label></th>
                 <td>
-                    <script>
-                        var yandexMapConfig_admin_page = {
-                            width: "100%",
-                            height: "300px",
-                            lat: <?php echo esc_attr(get_option('yandex_map_default_lat', 0)) ?>,
-                            lng: <?php echo esc_attr(get_option('yandex_map_default_lng', 0)) ?>,
-                            zoom: <?php echo esc_attr(get_option('yandex_map_default_zoom', 13)) ?>
-                        };
-
-                        var initYandexMap_admin_page = function(){
-                            var map = new YandexMapClass(document.getElementById("admin_page"), yandexMapConfig_admin_page);
-                            map.changeMarkerPosition = function(event){
-                                console.log(event);
-                            };
-                            map.setMarker({
-                                lat: <?php echo esc_attr(get_option('yandex_map_default_lat', 0)) ?>,
-                                lng: <?php echo esc_attr(get_option('yandex_map_default_lng', 0)) ?>,
-                                options: {
-                                    draggable: true
-                                }
-                            });
-                        };
-                        jQuery(document).on('yandexMapLoaded', function(){
-                            initYandexMap_admin_page();
-                        });
-                    </script>
-                    <div id="admin_page"><span class="text-loading">Загрузка карты...</span></div>
+                    <?php do_action('insert_yandex_map', array(
+                        'lat' => esc_attr(get_option('yandex_map_default_lat', 0)),
+                        'lng' => esc_attr(get_option('yandex_map_default_lng', 0)),
+                        'zoom' => esc_attr(get_option('yandex_map_default_zoom', 13))
+                    )) ?>
                 </td>
             </tr>
         </table>

@@ -3,41 +3,117 @@ var fireYandexMapLoaded = function(){
 };
 
 var YandexMapClass = function(node, mapConfig){
-    var lib = this, map = map || {};
+    "use strict";
 
-    this.changeMarkerPosition = function(){};
+    // Reference to this.
+    var lib = this;
 
-    if(typeof(ymaps) == 'undefined') {
+    // Global map object.
+    var map = map || {};
+
+    // Check if yandex map api is not loaded.
+    if(typeof(ymaps) == 'undefined'){
         console.warn('\'ymaps\' class wasn\'t loaded but class was called');
         return;
     }
 
-    var removeLoader = function(){
+    /**
+     * Remove map loader's placeholder.
+     * @private
+     */
+    var _removeLoader = function(){
         node.querySelector('.text-loading').remove();
     };
 
-    var setMapSize = function(){
+    /**
+     * Set map size. Values taken from settings page.
+     * @private
+     */
+    var _setMapSize = function(){
         node.style.width = mapConfig.width;
         node.style.height = mapConfig.height;
     };
 
-    this.setMarker = function(data){
+    /**
+     * Get map zoom.
+     * @return number - value of the current map zoom.
+     */
+    lib.getZoom = function(){
+
+        return map.getZoom();
+    };
+
+    /**
+     * Get map center.
+     * @return array - value of the current map zoom.
+     */
+    lib.getCenter = function(){
+
+        return map.getCenter();
+    };
+
+    /**
+     * Set marker to a map and apply event listeners to it.
+     * @param data - object - marker data.
+     */
+    lib.createMarker = function(data){
+
         var placemark = new ymaps.Placemark([data.lat, data.lng], data.properties || {}, data.options || {});
-        
-        placemark.events.add('dragend', this.changeMarkerPosition);
+
+        /**
+         * Bind events to placemark.
+         * @param events - object - events set to a marker.
+         * @private
+         */
+        placemark._addEvents = function(events){
+            if(typeof(events) != 'undefined'){
+
+                for(var key in events){
+                    if(events.hasOwnProperty(key)){
+
+                        placemark.events.add(key, events[key].bind(placemark));
+                    }
+                }
+            }
+        };
+
+        return placemark;
+    };
+
+    lib._addEvents = function(events){
+        if(typeof(events) != 'undefined'){
+
+            for(var key in events){
+                if(events.hasOwnProperty(key)){
+
+                    map.events.add(key, events[key].bind(map));
+                }
+            }
+        }
+    };
+
+    lib.placeMarker = function(placemark){
 
         map.geoObjects.add(placemark);
     };
 
     lib.init = function(){
-        setMapSize();
+
+        _setMapSize();
+
         map = new ymaps.Map(node, {
             center: [
                 mapConfig.lat, mapConfig.lng
             ],
             zoom: mapConfig.zoom
         });
-        removeLoader();
+
+        _removeLoader();
+    };
+
+    lib.getSearchControls = function(){
+
+        return map.controls.get('searchControl');
     };
 
     lib.init();
