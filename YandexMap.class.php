@@ -8,12 +8,17 @@
  */
 class YandexMap
 {
+
+    public  function  __construct()
+    {
+        $this->init();
+    }
+
     /**
      * Initialize plugin functionality.
      */
     public static function init()
     {
-
         self::register_scripts();
     }
 
