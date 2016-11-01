@@ -66,10 +66,12 @@ class YandexMapAdmin
     public function render_maps_page()
     {?>
         <div class="wrap">
-            <h2>WP_List_Table Class Example</h2>
+            <h2>
+                Мои карты
+                <a href="http://wp-yandex.dev/wp-admin/post-new.php" class="page-title-action"><?=_e('Добавить','test')?></a>
+            </h2>
 
             <div id="poststuff">
-                <div id="post-body" class="metabox-holder columns-2">
                     <div id="post-body-content">
                         <div class="meta-box-sortables ui-sortable">
                             <form method="post">
@@ -80,7 +82,7 @@ class YandexMapAdmin
                             </form>
                         </div>
                     </div>
-                </div>
+
                 <br class="clear">
             </div>
         </div>
