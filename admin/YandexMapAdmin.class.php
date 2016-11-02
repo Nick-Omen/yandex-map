@@ -20,7 +20,7 @@ class YandexMapAdmin
      */
     public static function init()
     {
-        add_action('admin_menu', array('YandexMapAdmin', 'add_menu_instance'));
+        add_action('admin_menu', array('YandexMapAdmin', 'add_menu_instances'));
         add_action('admin_init', array('YandexMapAdmin', 'register_settings'));
         add_action('admin_init', array('YandexMapAdmin', 'register_scripts'));
 
@@ -34,10 +34,20 @@ class YandexMapAdmin
     /**
      * Add configuration page link in menu.
      */
-    public static function add_menu_instance()
+    public static function add_menu_instances()
     {
-        add_options_page(__('Яндекс карты', 'yandex-map'), __('Яндекс карты', 'yandex-map'), 'manage_options', 'yandex-map-config',
+        add_menu_page(__('Яндекс карты', 'yandex-map'), __('Яндекс карты', 'yandex-map'), 'manage_options', 'yandex-map',
             array('YandexMapAdmin', 'display_page_configs'));
+
+        add_submenu_page('yandex-map', __('Мои карты', 'yandex-map'), __('Мои карты', 'yandex-map'), 'manage_options', 'my-yandex-maps',
+            array('YandexMapAdmin', 'display_my_maps'));
+        add_submenu_page('yandex-map', __('Добавить карту', 'yandex-map'), __('Добавить карту', 'yandex-map'), 'manage_options', 'add-yandex-map',
+            array('YandexMapAdmin', 'display_add_map'));
+
+        add_submenu_page('yandex-map', __('Мои маркеры', 'yandex-map'), __('Мои маркеры', 'yandex-map'), 'manage_options', 'my-yandex-markers',
+            array('YandexMapAdmin', 'display_my_markers'));
+        add_submenu_page('yandex-map', __('Добавить маркер', 'yandex-map'), __('Добавить маркер', 'yandex-map'), 'manage_options', 'add-yandex-marker',
+            array('YandexMapAdmin', 'display_add_marker'));
     }
 
     /**
@@ -96,6 +106,38 @@ class YandexMapAdmin
     {
         wp_enqueue_script('yandex-map-admin');
         require_once(YMAP_PLUGIN_DIR . 'admin' . YMAP_DS . 'views' . YMAP_DS . 'config.php');
+    }
+
+    /**
+     * Render my maps page.
+     */
+    public static function display_my_maps()
+    {
+        require_once(YMAP_PLUGIN_DIR . 'admin' . YMAP_DS . 'views' . YMAP_DS . 'my-maps.php');
+    }
+
+    /**
+     * Render add map page.
+     */
+    public static function display_add_map()
+    {
+        require_once(YMAP_PLUGIN_DIR . 'admin' . YMAP_DS . 'views' . YMAP_DS . 'add-map.php');
+    }
+
+    /**
+     * Render my maps page.
+     */
+    public static function display_my_markers()
+    {
+        require_once(YMAP_PLUGIN_DIR . 'admin' . YMAP_DS . 'views' . YMAP_DS . 'my-markers.php');
+    }
+
+    /**
+     * Render add map page.
+     */
+    public static function display_add_marker()
+    {
+        require_once(YMAP_PLUGIN_DIR . 'admin' . YMAP_DS . 'views' . YMAP_DS . 'add-marker.php');
     }
 
     public static function add_yandex_post_type()
