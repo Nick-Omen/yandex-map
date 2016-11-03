@@ -19,13 +19,23 @@ define('YMAP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('YMAP_FOLDER_NAME', dirname(plugin_basename(__FILE__)));
 define('YMAP_PLUGIN_URL', plugins_url() . '/' . YMAP_FOLDER_NAME . '/');
 define('YMAP_PLUGIN_VERSION', '0.1');
+define('YMAP_TABLE_PREFIX', 'dp_');
 
 // Initialize a plugin
 require_once(YMAP_PLUGIN_DIR . 'YandexMap.class.php');
 add_action('init', array('YandexMap', 'init'));
+register_activation_hook(__FILE__, array('YandexMap', 'yamap_activation'));
+register_deactivation_hook(__FILE__, array('YandexMap', 'yamap_deactivate'));
 
 if (is_admin()) {
     // Initialize admin size of the plugin
-    require_once YMAP_PLUGIN_DIR . 'admin' . YMAP_DS . 'YandexMapAdmin.class.php';
-    add_action('init', array('YandexMapAdmin', 'init'));
+    if (!class_exists('WP_List_Table')) {
+        require_once( ABSPATH . 'wp-admin/includes/class-wp-screen.php' );
+        require_once( ABSPATH . 'wp-admin/includes/screen.php' );
+        require_once( ABSPATH . 'wp-admin/includes/class-wp-list-table.php' );
+        require_once( ABSPATH . 'wp-admin/includes/template.php' );
+        require_once YMAP_PLUGIN_DIR . 'admin' . YMAP_DS . 'YandexMapAdmin.class.php';
+        new YandexMapAdmin();
+    }
 }
+
