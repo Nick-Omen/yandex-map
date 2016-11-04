@@ -134,20 +134,16 @@ class MyMapsTable extends WP_List_Table
      *
      * @return string
      */
-    function column_name($item)
+    function column_Title($item)
     {
-
-        // create a nonce
-        $delete_nonce = wp_create_nonce('ya_map_delete');
-
         $title = '<strong>' . $item['Title'] . '</strong>';
 
         $actions = [
-            'delete' => sprintf('<a href="?page=%s&action=%s&map=%s">Удалить</a>',
-                esc_attr($_REQUEST['page']), 'delete', absint($item['ID'])),
-            'edit' => sprintf('<a href="?page=%s&action=%s&map=%s">Edit</a>', $_REQUEST['page'], 'edit', $item['ID']),
+            'delete' => sprintf('<a href="?page=%s&action=%s&map=%s">%s</a>',
+                esc_attr($_REQUEST['page']), 'delete', absint($item['ID']), __('Удалить', 'yandex-map')),
+            'edit' => sprintf('<a href="?page=%s&action=%s&map=%s">%s</a>', 'add-yandex-map', 'edit', $item['ID'],
+                __('Редактировать', 'yandex-map')),
         ];
-
         return $title . $this->row_actions($actions);
     }
 
@@ -186,5 +182,19 @@ class MyMapsTable extends WP_List_Table
         return sprintf(
             '<input type="checkbox" name="bulk-delete[]" value="%s" />', $item['ID']
         );
+    }
+
+    /**
+     * Returns an associative array containing the bulk action
+     *
+     * @return array
+     */
+    public function get_bulk_actions()
+    {
+        $actions = [
+            'bulk-delete' => 'Delete'
+        ];
+
+        return $actions;
     }
 }
