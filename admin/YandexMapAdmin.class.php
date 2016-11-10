@@ -44,14 +44,36 @@ class YandexMapAdmin
         add_action('admin_menu', array($this, 'add_menu_instances'));
         add_action('admin_init', array($this, 'register_settings'));
         add_action('admin_init', array($this, 'register_scripts'));
-
         add_action('add_meta_boxes', array($this, 'yandex_custom_box'));
-
         add_action('insert_yandex_map', array($this, 'insert_yandex_map'));
+        add_action( 'admin_notices', Array($this, 'show_notice'));
 
-//        self::add_yandex_post_type();
+        add_action('admin_post_map_handler', Array($this,'map_editor_listener'));
     }
 
+    /**
+     * Showing notice after some POST actions
+     */
+    function show_notice()
+    {
+        if (isset($_GET['success']) ) {
+            echo '<div class="updated"><p>Карта добавлена</p></div>';
+        }
+
+        if(isset($_GET['error'])) {
+            echo '<div class="error"><p>Ошибка при сохранении или валидации</p></div>';
+        }
+    }
+
+    /**
+     * Post handler of the Add map form
+     */
+    function map_editor_listener()
+    {
+        // validate post from
+        wp_redirect(admin_url('admin.php?page=add-yandex-map&success'));
+        die();
+    }
     /**
      * Add configuration page link in menu.
      */
