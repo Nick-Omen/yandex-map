@@ -61,8 +61,8 @@ var AdminYandexMapClass = function(initialConfig){
     };
 
     lib.searchControlsHandler = function(){
-
-        searchControl.events.add('resultshow', lib.searchControlsUsed)
+        searchControl.events.add('resultshow', lib.searchControlsUsed);
+        searchControl.events.add('resultselect', lib.searchControlSelected);
     };
 
     lib.mapHandler = function(){
@@ -75,14 +75,22 @@ var AdminYandexMapClass = function(initialConfig){
     };
 
     lib.applyValuesToInput = function(values){
-
         document.querySelector('input.lat').setAttribute('value', values.lat || '');
         document.querySelector('input.lng').setAttribute('value', values.lng || '');
         document.querySelector('input.zoom').setAttribute('value', values.zoom || '');
     };
 
-    lib.searchControlsUsed = function(){
+    lib.searchControlSelected = function(result) {
+        var coordinates = searchControl.getResultsArray()[result.get('index')].geometry.getCoordinates();
+        var mapZoom = map.getZoom();
+        lib.applyValuesToInput({
+            lat: coordinates[0],
+            lng: coordinates[1],
+            zoom: mapZoom.toString()
+        });
+    }
 
+    lib.searchControlsUsed = function(){
         searchControl.clear();
         var mapCenter = map.getCenter();
         lib.setInitialMarker({
@@ -95,6 +103,5 @@ var AdminYandexMapClass = function(initialConfig){
             zoom: map.getZoom().toString()
         });
     };
-
     lib.init();
 };

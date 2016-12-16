@@ -79,45 +79,4 @@ class YandexMap
         $sql = "DROP TABLE IF EXISTS $marker_table";
         $wpdb->query($sql);
     }
-
-    /**
-     * @param array $array  - array of the map data
-     * @return false|int
-     */
-    public static function add_map(array $array)
-    {
-        global $wpdb;
-
-        $map_table = $wpdb->prefix . YMAP_TABLE_PREFIX . "maps";
-
-        $coordinates = array(
-            'lat' => $array['lat'],
-            'lon' => $array['lon']
-        );
-        $json = self::built_map_json($coordinates, 'coordinates');
-
-        $data = array('Zoom' => $array['zoom'] ?: 13, 'Title' => $array['title'], 'Json' => $json);
-        $format = array('%d','%s', '%s');
-
-        return $wpdb->insert($map_table,$data,$format);
-    }
-
-    /**
-     * Build json to insert/update map table
-     * @param array - data
-     * @param $key - key
-     * @param bool $map_id - only for update function
-     * @return mixed|string|void
-     */
-    public static function built_map_json(array $data, $key, $map_id = false)
-    {
-        $out = array();
-        if (!$map_id) {
-            $out[$key] = $data;
-        }
-
-        $json = json_encode($out, true);
-
-        return $json;
-    }
 }

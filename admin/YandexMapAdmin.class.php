@@ -70,9 +70,28 @@ class YandexMapAdmin
      */
     function map_editor_listener()
     {
-        // validate post from
-        wp_redirect(admin_url('admin.php?page=add-yandex-map&success'));
+        $arg['lat']   = sanitize_text_field($_POST['lat']);
+        $arg['lon']   = sanitize_text_field($_POST['lon']);
+        $arg['zoom']  = sanitize_text_field($_POST['zoom']);
+        $arg['title'] = sanitize_text_field($_POST['post_title']);
+
+        $error = true;
+        if(!$error) {
+
+        } else {
+            //todo show errors
+            wp_redirect(admin_url('admin.php?page=add-yandex-map&error'));
+        }
         die();
+    }
+
+    /**
+     * Validate post data
+     * @param $args
+     */
+    public function validate_map($args)
+    {
+
     }
     /**
      * Add configuration page link in menu.
@@ -233,5 +252,46 @@ class YandexMapAdmin
     public function renderYandexBox()
     {
         require_once(YMAP_PLUGIN_DIR . 'admin' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'yandex-map-box.php');
+    }
+
+    /**
+     * @param array $array  - array of the map data
+     * @return false|int
+     */
+    public static function add_map(array $array)
+    {
+        global $wpdb;
+
+        $map_table = $wpdb->prefix . YMAP_TABLE_PREFIX . "maps";
+
+        $coordinates = array(
+            'lat' => $array['lat'],
+            'lon' => $array['lon']
+        );
+        $json = self::built_map_json($coordinates, 'coordinates');
+
+        $data = array('Zoom' => $array['zoom'] ?: 13, 'Title' => $array['title'], 'Json' => $json);
+        $format = array('%d','%s', '%s');
+
+        return $wpdb->insert($map_table,$data,$format);
+    }
+
+    /**
+     * Build json to insert/update map table
+     * @param array - data
+     * @param $key - key
+     * @param bool $map_id - only for update function
+     * @return mixed|string|void
+     */
+    public static function built_map_json(array $data, $key, $map_id = false)
+    {
+        $out = array();
+        if (!$map_id) {
+            $out[$key] = $data;
+        }
+
+        $json = json_encode($out, true);
+
+        return $json;
     }
 }
