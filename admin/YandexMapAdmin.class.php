@@ -46,9 +46,9 @@ class YandexMapAdmin
         add_action('admin_init', array($this, 'register_scripts'));
         add_action('add_meta_boxes', array($this, 'yandex_custom_box'));
         add_action('insert_yandex_map', array($this, 'insert_yandex_map'));
-        add_action( 'admin_notices', Array($this, 'show_notice'));
+        add_action('admin_notices', Array($this, 'show_notice'));
 
-        add_action('admin_post_map_handler', Array($this,'map_editor_listener'));
+        add_action('admin_post_map_handler', Array($this, 'map_editor_listener'));
     }
 
     /**
@@ -56,11 +56,11 @@ class YandexMapAdmin
      */
     function show_notice()
     {
-        if (isset($_GET['success']) ) {
+        if (isset($_GET['success'])) {
             echo '<div class="updated"><p>Карта добавлена</p></div>';
         }
 
-        if(isset($_GET['error'])) {
+        if (isset($_GET['error'])) {
             echo '<div class="error"><p>Ошибка при сохранении или валидации</p></div>';
         }
     }
@@ -70,14 +70,14 @@ class YandexMapAdmin
      */
     function map_editor_listener()
     {
-        $arg['lat']   = sanitize_text_field($_POST['lat']);
-        $arg['lon']   = sanitize_text_field($_POST['lon']);
-        $arg['zoom']  = sanitize_text_field($_POST['zoom']);
-        $arg['title'] = sanitize_text_field($_POST['post_title']);
-
-        $error = true;
-        if(!$error) {
-
+        $args['lat'] = sanitize_text_field($_POST['lat']);
+        $args['lon'] = sanitize_text_field($_POST['lon']);
+        $args['zoom'] = sanitize_text_field($_POST['zoom']);
+        $args['title'] = sanitize_text_field($_POST['post_title']);
+        $errors = $this->validate_map_data($args);
+        if (!$errors) {
+            $this->add_map($args);
+            wp_redirect(admin_url('admin.php?page=add-yandex-map&success'));
         } else {
             //todo show errors
             wp_redirect(admin_url('admin.php?page=add-yandex-map&error'));
@@ -86,13 +86,32 @@ class YandexMapAdmin
     }
 
     /**
+     * Map data validation method.
+     *
+     * @param array $args - data of the map.
+     */
+    public function validate_map_data($args)
+    {
+        $tmpErrors = array();
+        foreach ($args as $key => $value) {
+            if (!$value) {
+                $tmpErrors[] = "{$key} doesn't filled";
+            }
+        }
+
+        return $tmpErrors;
+    }
+
+    /**
      * Validate post data
+     *
      * @param $args
      */
     public function validate_map($args)
     {
 
     }
+
     /**
      * Add configuration page link in menu.
      */
@@ -140,6 +159,7 @@ class YandexMapAdmin
 
     /**
      * Insert yandex map as a shortcode.
+     *
      * @param $atts - array
      */
     public function insert_yandex_map($args)
@@ -188,6 +208,14 @@ class YandexMapAdmin
      */
     public function display_add_map()
     {
+        if ($_GET['action'] == 'edit' && $_GET['map']) {
+            $map_id = sanitize_text_field($_GET['map']);
+            $map_data = $this->get_map($map_id);
+            $lat = $map_data['coordinates']['lat'];
+            $lon = $map_data['coordinates']['lon'];
+        } else {
+
+        }
         require_once(YMAP_PLUGIN_DIR . 'admin' . YMAP_DS . 'views' . YMAP_DS . 'add-map.php');
     }
 
@@ -255,10 +283,10 @@ class YandexMapAdmin
     }
 
     /**
-     * @param array $array  - array of the map data
+     * @param array $array - array of the map data
      * @return false|int
      */
-    public static function add_map(array $array)
+    public function add_map(array $array)
     {
         global $wpdb;
 
@@ -270,18 +298,48 @@ class YandexMapAdmin
         );
         $json = self::built_map_json($coordinates, 'coordinates');
 
-        $data = array('Zoom' => $array['zoom'] ?: 13, 'Title' => $array['title'], 'Json' => $json);
-        $format = array('%d','%s', '%s');
+        $data = array(
+            'Zoom' => $array['zoom'] ?: 13,
+            'Title' => $array['title'],
+            'Json' => $json,
+            'Shordcode' => $this->generate_shordcode($array),
+        );
 
-        return $wpdb->insert($map_table,$data,$format);
+        $format = array(
+            '%d',
+            '%s',
+            '%s',
+            '%s',
+        );
+
+        return $wpdb->insert($map_table, $data, $format);
     }
 
     /**
-     * Build json to insert/update map table
-     * @param array - data
-     * @param $key - key
-     * @param bool $map_id - only for update function
-     * @return mixed|string|void
+     * Generate shorcode for displaying in the front-end.
+     *
+     * @param  array $data - Data of the map
+     * @return string $shordcode - Generated shordcode
+     */
+    public function generate_shordcode($data)
+    {
+        $args = '';
+        foreach ($data as $key => $value) {
+            $args .= "{$key}='{$value}' ";
+        }
+        $args = rtrim($args);
+        $shordcode = "[dp_yandex {$args}]";
+
+        return $shordcode;
+    }
+
+    /**
+     * Build json to insert/update map table.
+     *
+     * @param  array  $data   - data to build
+     * @param  string $key    - key of the map (on edit action)
+     * @param  bool   $map_id - only for update function
+     * @return $json
      */
     public static function built_map_json(array $data, $key, $map_id = false)
     {
@@ -294,4 +352,33 @@ class YandexMapAdmin
 
         return $json;
     }
+
+    /**
+     * Return map data.
+     *
+     * @param $map_id - ID of the needed map
+     * @return  array $map  - Map data
+     */
+    public function get_map($map_id)
+    {
+        global  $wpdb;
+
+        $table = $wpdb->prefix . YMAP_TABLE_PREFIX . "maps";
+        $sql = "SELECT * FROM  {$table} WHERE `ID` = {$map_id}";
+        $map  = $wpdb->get_row($sql, ARRAY_A);
+        if($map['Json']) {
+            $map['coordinates '] = $this->parse_json($map['Json'], 'coordinates');
+        }
+
+        return $map;
+    }
+
+    public function parse_json($map_json, $key = false)
+    {
+        $decoded = json_decode($map_json, true);
+        $result = $key ? $decoded[$key]: $decoded;
+
+        return $result;
+    }
+
 }
