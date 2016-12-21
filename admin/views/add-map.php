@@ -1,10 +1,13 @@
 <div class="wrap">
     <h1>Добавить карту</h1>
     <form method='post' action='admin-post.php' novalidate>
-        <input name='action' type="hidden" value='map_handler'>
+        <input name='action' type="hidden" value='<?=$action?>_map'>
+        <?php if($action == 'edit'): ?>
+            <input type="hidden" name="map" value="<?=$map_id;?>">
+        <?php endif; ?>
         <div class="poststuff">
             <div id="titlediv">
-                <input placeholder="Введите" type="text" name="post_title" size="30" value="" id="title" spellcheck="true" autocomplete="off">
+                <input value="<?=$title;?>" placeholder="Введите" type="text" name="post_title" size="30" value="" id="title" spellcheck="true" autocomplete="off">
             </div>
         </div>
         <div class="yandex-map-container">
@@ -19,24 +22,20 @@
                 </label>
             </div>
             <div class="coordinates map" style="padding-top: 10px;">
-                <?php do_action('insert_yandex_map', array(
-                    'lat' => esc_attr(get_option('yandex_map_default_lat', 0)),
-                    'lng' => esc_attr(get_option('yandex_map_default_lng', 0)),
-                    'zoom' => esc_attr(get_option('yandex_map_default_zoom', 13))
-                )) ?>
+                <?php do_action('insert_yandex_map', array( 'lat' => $lat, 'lng' => $lon,'zoom' => $zoom)) ?>
             </div>
             <div class="coordinates hand" style="padding-top: 10px; display: none;">
                 <label>
                     Lat
-                    <input name="lat" class="lat" type="number" min="-179.999999" max="179.999999" step="0.000001"/>
+                    <input value="<?=$lat;?>" name="lat" class="lat" type="number" min="-179.999999" max="179.999999" step="0.000001"/>
                 </label>
                 <label>
                     Lng
-                    <input name="lon" class="lng" type="number" min="-179.999999" max="179.999999" step="0.000001"/>
+                    <input value="<?=$lon;?>" name="lon" class="lng" type="number" min="-179.999999" max="179.999999" step="0.000001"/>
                 </label>
                 <label>
                     Zoom
-                    <input name="zoom" class="zoom" type="number" min="-179.999999" max="179.999999" step="0.000001"/>
+                    <input value="<?=$zoom;?>" name="zoom" class="zoom" type="number" min="-179.999999" max="179.999999" step="0.000001"/>
                 </label>
             </div>
         </div>

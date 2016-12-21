@@ -48,7 +48,8 @@ class YandexMapAdmin
         add_action('insert_yandex_map', array($this, 'insert_yandex_map'));
         add_action('admin_notices', Array($this, 'show_notice'));
 
-        add_action('admin_post_map_handler', Array($this, 'map_editor_listener'));
+        add_action('admin_post_add_map', Array($this, 'map_editor_listener'));
+        add_action('admin_post_edit_map', Array($this, 'map_editor_listener'));
     }
 
     /**
@@ -70,13 +71,19 @@ class YandexMapAdmin
      */
     function map_editor_listener()
     {
+        $action = sanitize_text_field($_POST['action']);
         $args['lat'] = sanitize_text_field($_POST['lat']);
         $args['lon'] = sanitize_text_field($_POST['lon']);
         $args['zoom'] = sanitize_text_field($_POST['zoom']);
         $args['title'] = sanitize_text_field($_POST['post_title']);
         $errors = $this->validate_map_data($args);
         if (!$errors) {
-            $this->add_map($args);
+            if ($action === 'add_map') {
+                $this->add_map($args);
+            } else {
+                $map_id = sanitize_text_field($_POST['map']);
+                $this->edit_map($args, $map_id);
+            }
             wp_redirect(admin_url('admin.php?page=add-yandex-map&success'));
         } else {
             //todo show errors
@@ -100,16 +107,6 @@ class YandexMapAdmin
         }
 
         return $tmpErrors;
-    }
-
-    /**
-     * Validate post data
-     *
-     * @param $args
-     */
-    public function validate_map($args)
-    {
-
     }
 
     /**
@@ -213,9 +210,16 @@ class YandexMapAdmin
             $map_data = $this->get_map($map_id);
             $lat = $map_data['coordinates']['lat'];
             $lon = $map_data['coordinates']['lon'];
+            $zoom = $map_data['Zoom'];
+            $title = $map_data['Title'];
+            $action = 'edit';
         } else {
-
+            $lat = esc_attr(get_option('yandex_map_default_lat', 0));
+            $lon = esc_attr(get_option('yandex_map_default_lng', 0));
+            $zoom = esc_attr(get_option('yandex_map_default_zoom', 7));
+            $action = 'add';
         }
+
         require_once(YMAP_PLUGIN_DIR . 'admin' . YMAP_DS . 'views' . YMAP_DS . 'add-map.php');
     }
 
@@ -282,6 +286,47 @@ class YandexMapAdmin
         require_once(YMAP_PLUGIN_DIR . 'admin' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'yandex-map-box.php');
     }
 
+
+    /**
+     * Prepare Map data to Insert/Edit into database
+     *
+     * @param array $data - map array
+     * @return array $map - prepared map data
+     */
+    public function prepare_map_data($data)
+    {
+        $coordinates = array(
+            'lat' => $data['lat'],
+            'lon' => $data['lon']
+        );
+        $json = self::built_map_json($coordinates, 'coordinates');
+
+        $map = array(
+            'Zoom' => $data['zoom'] ?: 13,
+            'Title' => $data['title'],
+            'Json' => $json,
+            'Shordcode' => $this->generate_shordcode($data),
+        );
+
+        return $map;
+    }
+
+    /**
+     * Edit map.
+     *
+     * @param array $data   - new map data
+     * @param  int  $map_id - ID of the map which you want to edit
+     */
+    public function edit_map(array $data, $map_id)
+    {
+        global $wpdb;
+
+        $map_table = $wpdb->prefix . YMAP_TABLE_PREFIX . "maps";
+        $data = $this->prepare_map_data($data);
+        $format = array('%d', '%s', '%s', '%s');
+        return $wpdb->update($map_table, $data, array('ID' => $map_id), $format, array('%d'));
+    }
+
     /**
      * @param array $array - array of the map data
      * @return false|int
@@ -291,32 +336,13 @@ class YandexMapAdmin
         global $wpdb;
 
         $map_table = $wpdb->prefix . YMAP_TABLE_PREFIX . "maps";
-
-        $coordinates = array(
-            'lat' => $array['lat'],
-            'lon' => $array['lon']
-        );
-        $json = self::built_map_json($coordinates, 'coordinates');
-
-        $data = array(
-            'Zoom' => $array['zoom'] ?: 13,
-            'Title' => $array['title'],
-            'Json' => $json,
-            'Shordcode' => $this->generate_shordcode($array),
-        );
-
-        $format = array(
-            '%d',
-            '%s',
-            '%s',
-            '%s',
-        );
-
+        $data = $this->prepare_map_data($array);
+        $format = array('%d', '%s', '%s', '%s');
         return $wpdb->insert($map_table, $data, $format);
     }
 
     /**
-     * Generate shorcode for displaying in the front-end.
+     * Generate shortcode for displaying in the front-end.
      *
      * @param  array $data - Data of the map
      * @return string $shordcode - Generated shordcode
@@ -361,24 +387,30 @@ class YandexMapAdmin
      */
     public function get_map($map_id)
     {
-        global  $wpdb;
+        global $wpdb;
 
         $table = $wpdb->prefix . YMAP_TABLE_PREFIX . "maps";
         $sql = "SELECT * FROM  {$table} WHERE `ID` = {$map_id}";
-        $map  = $wpdb->get_row($sql, ARRAY_A);
-        if($map['Json']) {
-            $map['coordinates '] = $this->parse_json($map['Json'], 'coordinates');
+        $map = $wpdb->get_row($sql, ARRAY_A);
+        if ($map['Json']) {
+            $map['coordinates'] = $this->parse_json($map['Json'], 'coordinates');
         }
 
         return $map;
     }
 
+    /**
+     * Get value from Map json data.
+     *
+     * @param json $map_json - Json string of the map
+     * @param bool $key      - Key in the map json
+     * @return array $result - parsed array
+     */
     public function parse_json($map_json, $key = false)
     {
         $decoded = json_decode($map_json, true);
-        $result = $key ? $decoded[$key]: $decoded;
+        $result = $key ? $decoded[$key] : $decoded;
 
         return $result;
     }
-
 }
