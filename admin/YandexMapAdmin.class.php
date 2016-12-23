@@ -24,15 +24,26 @@ class YandexMapAdmin
     public $coordinates_object;
 
     /**
+     * @var
+     */
+    public  $markers;
+
+
+    /**
      * YandexMapAdmin constructor.
      */
     function __construct()
     {
         $this->version = YMAP_PLUGIN_VERSION;
         $this->init();
+
         //include tables
         require_once(YMAP_PLUGIN_DIR . 'admin' . YMAP_DS . 'MyMapsTable.class.php');
         $this->table_obj = new MyMapsTable();
+
+        //include Markers
+        require_once(YMAP_PLUGIN_DIR . 'admin' . YMAP_DS . 'AdminMarkers.class.php');
+        $this->markers = new AdminMarkers();
 
     }
 
@@ -50,6 +61,8 @@ class YandexMapAdmin
 
         add_action('admin_post_add_map', Array($this, 'map_editor_listener'));
         add_action('admin_post_edit_map', Array($this, 'map_editor_listener'));
+
+        add_action('admin_post_add_marker', Array($this, 'marker_editor_listener'));
     }
 
     /**
@@ -76,7 +89,7 @@ class YandexMapAdmin
         $args['lon'] = sanitize_text_field($_POST['lon']);
         $args['zoom'] = sanitize_text_field($_POST['zoom']);
         $args['title'] = sanitize_text_field($_POST['post_title']);
-        $errors = $this->validate_map_data($args);
+        $errors = $this->validate_data($args);
         if (!$errors) {
             if ($action === 'add_map') {
                 $this->add_map($args);
@@ -92,12 +105,35 @@ class YandexMapAdmin
         die();
     }
 
+    public function marker_editor_listener()
+    {
+        $action = sanitize_text_field($_POST['action']);
+        $args['title'] = sanitize_text_field($_POST['lat']);
+        $args['lat'] = sanitize_text_field($_POST['lat']);
+        $args['lon'] = sanitize_text_field($_POST['lon']);
+        $args['map_id'] = sanitize_text_field($_POST['map_id']);
+        $args['description'] = sanitize_text_field($_POST['description']);
+
+        $errors = $this->validate_data($args);
+        
+        if(!$errors) {
+            if($action === 'add_marker') {
+                $this->markers->add_marker($args);
+            } else {
+                $marker_id = sanitize_text_field($_POST['marker']);
+                $this->markers->edit_marker($marker_id, $args);
+            }
+        } else {
+
+        }
+    }
+
     /**
      * Map data validation method.
      *
      * @param array $args - data of the map.
      */
-    public function validate_map_data($args)
+    public function validate_data($args)
     {
         $tmpErrors = array();
         foreach ($args as $key => $value) {
@@ -221,6 +257,7 @@ class YandexMapAdmin
         }
 
         require_once(YMAP_PLUGIN_DIR . 'admin' . YMAP_DS . 'views' . YMAP_DS . 'add-map.php');
+        unset($lat,$lon,$zoom,$action, $title);
     }
 
     /**
@@ -236,6 +273,16 @@ class YandexMapAdmin
      */
     public function display_add_marker()
     {
+        if($_GET['action'] == 'edit') {
+
+        } else {
+            $lat = esc_attr(get_option('yandex_map_default_lat', 0));
+            $lon = esc_attr(get_option('yandex_map_default_lng', 0));
+            $zoom = esc_attr(get_option('yandex_map_default_zoom', 7));
+            $action = 'add';
+            $maps = $this->table_obj->get_maps();
+        }
+
         require_once(YMAP_PLUGIN_DIR . 'admin' . YMAP_DS . 'views' . YMAP_DS . 'add-marker.php');
     }
 

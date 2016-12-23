@@ -31,7 +31,6 @@ class MyMapsTable extends WP_List_Table
             'total_items' => $total_items, //WE have to calculate the total number of items
             'per_page' => $per_page //WE have to determine how many items to show on a page
         ]);
-
         $this->items = self::get_maps($per_page, $current_page);
     }
 
