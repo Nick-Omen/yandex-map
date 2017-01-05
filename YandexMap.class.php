@@ -17,21 +17,32 @@ class YandexMap
     }
 
     /**
-     * Register scripts for plugin.
+     * Register scripts on the frontend pages when map is used.
      */
     public static function register_scripts()
     {
-        wp_register_script('yandex-map-class', YMAP_PLUGIN_URL . '_inc/yandex-map.class.js', array('jquery'), null,
-            true);
-        wp_register_script('yandex-map', "https://api-maps.yandex.ru/2.1/?lang=" . get_locale() . "&onload=fireYandexMapLoaded", false, null, true);
-        wp_register_script('yandex-map-js', YMAP_PLUGIN_URL . '_inc/yandex-map.js', array('jquery', 'yandex-map', 'yandex-map-class'), null,
+        wp_enqueue_script('yandex-map-api', "https://api-maps.yandex.ru/2.1/?lang=" . get_locale() . "&onload=fireYandexMapLoaded",
+            false, null, true);
+
+        wp_enqueue_script('yandex-base-class', YMAP_PLUGIN_URL . '_inc/classes/base.js', false, null, true);
+        wp_enqueue_script('yandex-map-class', YMAP_PLUGIN_URL . '_inc/classes/map.js', array('yandex-base-class'), null, true);
+        wp_enqueue_script('yandex-placemark-class', YMAP_PLUGIN_URL . '_inc/classes/placemark.js', array('yandex-base-class'), null, true);
+
+        wp_enqueue_script('yandex-map-interface', YMAP_PLUGIN_URL . '_inc/map.interface.js', array(
+            'jquery',
+            'yandex-map-api',
+            'yandex-map-class',
+            'yandex-placemark-class'
+        ), null, true);
+
+        wp_enqueue_script('yandex-map-js', YMAP_PLUGIN_URL . '_inc/yandex-map.js', array('yandex-map-interface'), null,
             true);
     }
 
     /**
      * Plugin activation
      */
-    public static function yamap_activation()
+    public function yamap_activation()
     {
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         global $wpdb;
@@ -68,7 +79,7 @@ class YandexMap
     /**
      * Plugin deactivation
      */
-    public static function yamap_deactivate()
+    public function yamap_deactivate()
     {
         global $wpdb;
         $map_table = $wpdb->prefix . YMAP_TABLE_PREFIX . "maps";

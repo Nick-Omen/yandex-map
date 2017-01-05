@@ -10,6 +10,7 @@
 $ymapWidthTmp = isset($atts['width']) ? $atts['width'] : esc_attr(get_option('yandex_map_default_width'));
 $ymapHeightTmp = isset($atts['height']) ? $atts['height'] : esc_attr(get_option('yandex_map_default_height'));
 ?>
+
 <script>
     var yandexMapConfig_<?php echo $tag; ?> = {
         width: "<?php echo $ymapWidthTmp == 0 ? "100%" : $ymapWidthTmp . 'px' ?>",
@@ -19,11 +20,9 @@ $ymapHeightTmp = isset($atts['height']) ? $atts['height'] : esc_attr(get_option(
         zoom: <?php echo isset($atts['zoom']) ? $atts['zoom'] : esc_attr(get_option('yandex_map_default_zoom', 13)) ?>
     };
 
-    var initYandexMap_<?php echo $tag; ?> = function(){
-        var map = new YandexMapClass(document.getElementById("<?php echo $tag; ?>"), yandexMapConfig_<?php echo $tag; ?>);
-    };
-    jQuery(document).on('yandexMapLoaded', function(){
-        initYandexMap_<?php echo $tag; ?>();
+    document.addEventListener('yandexMapLoaded', function(){
+
+        var map = new YandexMapInterface(document.getElementById("<?php echo $tag; ?>"), yandexMapConfig_<?php echo $tag; ?>);
     });
 </script>
 <div id="<?php echo $tag; ?>"><span class="text-loading">Загрузка карты...</span></div>

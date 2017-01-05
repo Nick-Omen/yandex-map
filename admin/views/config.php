@@ -9,7 +9,7 @@
 ?>
 
 <div class="wrap">
-    <h1><?php _e('Конфигурация карты Яндекс', 'yandex-map') ?></h1>
+    <h1><?php _e('Настройка карт', 'yandex-map') ?></h1>
     <div class="notice">
         <p><?php _e('Текущие настройки применимы ко всем Яндекс-картам, для которых не заданы параметры.', 'yandex-map') ?></p>
     </div>
@@ -60,7 +60,7 @@
                     <input id="yandex-map_default-lat" class="lat"
                            name="yandex_map_default_lat"
                            value="<?php echo esc_attr(get_option('yandex_map_default_lat', 0)); ?>"
-                           type="number" min="-179.999999" max="179.999999" step="0.000001"/>
+                           type="number" min="-179.999999" max="179.999999" step="0.000001" size="24"/>
                 </td>
             </tr>
             <tr valign="top" class="coordinates hand" style="display: none;">
@@ -69,7 +69,7 @@
                     <input id="yandex-map_default-lng" class="lng"
                            name="yandex_map_default_lng"
                            value="<?php echo esc_attr(get_option('yandex_map_default_lng', 0)); ?>"
-                           type="number" min="-179.999999" max="179.999999" step="0.000001"/>
+                           type="number" min="-179.999999" max="179.999999" step="0.000001" size="24"/>
                 </td>
             </tr>
             <tr valign="top" class="coordinates hand" style="display: none;">

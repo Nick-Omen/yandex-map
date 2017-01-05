@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Yandex map class.
+ * Yandex map admin class.
  *
  * License: GPLv2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -14,20 +14,24 @@ class YandexMapAdmin
     public $version;
 
     /**
-     * @var obj - My Maps table object
+     * @var object - My Maps table object
      */
     public $map_table;
 
     /**
-     * var obj = My Coordinates table object
+     * @var object - My Coordinates table object
      */
     public $coordinates_object;
 
     /**
      * @var
      */
-    public  $markers;
+    public $markers;
 
+    /**
+     * @var array - list of menu pages created in admin
+     */
+    public $menu_pages = array();
 
     /**
      * YandexMapAdmin constructor.
@@ -52,14 +56,20 @@ class YandexMapAdmin
      */
     public function init()
     {
-        add_action('admin_menu', array($this, 'add_menu_instances'));
         add_action('admin_init', array($this, 'register_settings'));
-        add_action('admin_init', array($this, 'register_scripts'));
+
+        add_action('admin_enqueue_scripts', array($this, 'register_scripts'));
+
+        add_action('admin_menu', array($this, 'add_menu_instances'));
+
         add_action('add_meta_boxes', array($this, 'yandex_custom_box'));
+
         add_action('insert_yandex_map', array($this, 'insert_yandex_map'));
+
         add_action('admin_notices', Array($this, 'show_notice'));
 
         add_action('admin_post_add_map', Array($this, 'map_editor_listener'));
+
         add_action('admin_post_edit_map', Array($this, 'map_editor_listener'));
 
         add_action('admin_post_add_marker', Array($this, 'marker_editor_listener'));
@@ -115,9 +125,9 @@ class YandexMapAdmin
         $args['description'] = sanitize_text_field($_POST['description']);
 
         $errors = $this->validate_data($args);
-        
-        if(!$errors) {
-            if($action === 'add_marker') {
+
+        if (!$errors) {
+            if ($action === 'add_marker') {
                 $this->markers->add_marker($args);
             } else {
                 $marker_id = sanitize_text_field($_POST['marker']);
@@ -132,6 +142,8 @@ class YandexMapAdmin
      * Map data validation method.
      *
      * @param array $args - data of the map.
+     *
+     * @return array $tmpErrors - array of errors
      */
     public function validate_data($args)
     {
@@ -150,21 +162,21 @@ class YandexMapAdmin
      */
     public function add_menu_instances()
     {
-        add_menu_page(__('Яндекс карты', 'yandex-map'), __('Яндекс карты', 'yandex-map'), 'manage_options',
+        $this->menu_pages[] = add_menu_page(__('Яндекс карты', 'yandex-map'), __('Яндекс карты', 'yandex-map'), 'manage_options',
             'yandex-map',
             array($this, 'display_page_configs'));
 
-        add_submenu_page('yandex-map', __('Мои карты', 'yandex-map'), __('Мои карты', 'yandex-map'), 'manage_options',
+        $this->menu_pages[] = add_submenu_page('yandex-map', __('Мои карты', 'yandex-map'), __('Мои карты', 'yandex-map'), 'manage_options',
             'my-yandex-maps',
             array($this, 'display_my_maps'));
-        add_submenu_page('yandex-map', __('Добавить карту', 'yandex-map'), __('Добавить карту', 'yandex-map'),
+        $this->menu_pages[] = add_submenu_page('yandex-map', __('Добавить карту', 'yandex-map'), __('Добавить карту', 'yandex-map'),
             'manage_options', 'add-yandex-map',
             array($this, 'display_add_map'));
 
-        add_submenu_page('yandex-map', __('Мои маркеры', 'yandex-map'), __('Мои маркеры', 'yandex-map'),
+        $this->menu_pages[] = add_submenu_page('yandex-map', __('Мои маркеры', 'yandex-map'), __('Мои маркеры', 'yandex-map'),
             'manage_options', 'my-yandex-markers',
             array($this, 'display_my_markers'));
-        add_submenu_page('yandex-map', __('Добавить маркер', 'yandex-map'), __('Добавить маркер', 'yandex-map'),
+        $this->menu_pages[] = add_submenu_page('yandex-map', __('Добавить маркер', 'yandex-map'), __('Добавить маркер', 'yandex-map'),
             'manage_options', 'add-yandex-marker',
             array($this, 'display_add_marker'));
     }
@@ -182,18 +194,23 @@ class YandexMapAdmin
     }
 
     /**
-     * Register scripts for admin side.
+     * Register scripts on the dashboard in plugin pages.
+     *
+     * @param string $hook Key of a page.
      */
-    public function register_scripts()
+    public function register_scripts($hook)
     {
-        wp_register_script('yandex-map-admin', YMAP_PLUGIN_URL . 'admin/_inc/yandex-map.admin.js',
-            array('jquery', 'yandex-map', 'yandex-map-class'), null, true);
+        if ($this->menu_pages && $hook && in_array($hook, $this->menu_pages)) {
+
+            wp_enqueue_script('yandex-map-admin-js', YMAP_PLUGIN_URL . 'admin/_inc/yandex-map.js',
+                array('yandex-map-interface'), null, true);
+        }
     }
 
     /**
      * Insert yandex map as a shortcode.
      *
-     * @param $atts - array
+     * @param $args - array
      */
     public function insert_yandex_map($args)
     {
@@ -208,10 +225,10 @@ class YandexMapAdmin
                 zoom: <?=$args['zoom'] ?>
             };
 
-            var initYandexMap_admin_page = function () {
+            var initYandexMap_admin_page = function(){
                 new AdminYandexMapClass(yandexMapConfig_admin_page);
             };
-            jQuery(document).on('yandexMapLoaded', function () {
+            jQuery(document).on('yandexMapLoaded', function(){
                 initYandexMap_admin_page();
             });
         </script>
@@ -257,7 +274,7 @@ class YandexMapAdmin
         }
 
         require_once(YMAP_PLUGIN_DIR . 'admin' . YMAP_DS . 'views' . YMAP_DS . 'add-map.php');
-        unset($lat,$lon,$zoom,$action, $title);
+        unset($lat, $lon, $zoom, $action, $title);
     }
 
     /**
@@ -273,7 +290,7 @@ class YandexMapAdmin
      */
     public function display_add_marker()
     {
-        if($_GET['action'] == 'edit') {
+        if ($_GET['action'] == 'edit') {
 
         } else {
             $lat = esc_attr(get_option('yandex_map_default_lat', 0));
@@ -361,8 +378,8 @@ class YandexMapAdmin
     /**
      * Edit map.
      *
-     * @param array $data   - new map data
-     * @param  int  $map_id - ID of the map which you want to edit
+     * @param array $data - new map data
+     * @param  int $map_id - ID of the map which you want to edit
      */
     public function edit_map(array $data, $map_id)
     {
@@ -409,9 +426,9 @@ class YandexMapAdmin
     /**
      * Build json to insert/update map table.
      *
-     * @param  array  $data   - data to build
-     * @param  string $key    - key of the map (on edit action)
-     * @param  bool   $map_id - only for update function
+     * @param  array $data - data to build
+     * @param  string $key - key of the map (on edit action)
+     * @param  bool $map_id - only for update function
      * @return $json
      */
     public static function built_map_json(array $data, $key, $map_id = false)
@@ -450,7 +467,7 @@ class YandexMapAdmin
      * Get value from Map json data.
      *
      * @param json $map_json - Json string of the map
-     * @param bool $key      - Key in the map json
+     * @param bool $key - Key in the map json
      * @return array $result - parsed array
      */
     public function parse_json($map_json, $key = false)
